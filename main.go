@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"errors"
+	"flag"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 )
 
 // 0: 未入力
@@ -96,6 +101,8 @@ func solved(b Board) bool {
 }
 
 func backtrack(b *Board) bool {
+	//time.Sleep(time.Millisecond * 500)
+	//fmt.Printf("%+v\n", pretty(*b))
 	if solved(*b) {
 		return true
 	}
@@ -118,17 +125,44 @@ func backtrack(b *Board) bool {
 	return false
 }
 
-func main() {
-	b := Board{
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
+func short(input string) (*Board, error) {
+	if len(input) != 81 {
+		return nil, errors.New("input short string length must be 81")
 	}
-	fmt.Printf("%+v\n", pretty(b))
+	s := bufio.NewScanner(strings.NewReader(input))
+	s.Split(bufio.ScanRunes)
+	var b Board
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			if !s.Scan() {
+				break
+			}
+			token := s.Text()
+			if token == "." {
+				b[i][j] = 0
+				continue
+			}
+			n, err := strconv.Atoi(token)
+			if err != nil {
+				return nil, err
+			}
+			b[i][j] = n
+		}
+	}
+	return &b, nil
+}
+
+func main() {
+	flag.Parse()
+	input := flag.Arg(0)
+	fmt.Printf("input = %+v\n", input)
+	b, err := short(input)
+	if err != nil {
+		panic(err)
+	}
+	if backtrack(b) {
+		fmt.Println(pretty(*b))
+	} else {
+		fmt.Fprint(os.Stderr, "cannot")
+	}
 }
